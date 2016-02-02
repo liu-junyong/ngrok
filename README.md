@@ -33,5 +33,34 @@ are only available by creating an account on ngrok.com. If you need them, [creat
 
 #### [Download ngrok for your platform](https://ngrok.com/download)
 
+## 自己编译
+ 配置环境变量
+
+export NGROK_DOMAIN="tunnel.bbear.me"  
+tunnel.bbear.me替换成你自己的域名。2). 生成自签名ssl证书
+
+cd ngrok
+
+openssl genrsa -out rootCA.key 2048
+
+openssl req -x509 -new -nodes -key rootCA.key -subj "/CN=$NGROK_DOMAIN" -days 5000 -out rootCA.pem
+
+openssl genrsa -out device.key 2048
+
+openssl req -new -key device.key -subj "/CN=$NGROK_DOMAIN" -out device.csr
+
+openssl x509 -req -in device.csr -CA rootCA.pem -CAkey rootCA.key -CAcreateserial -out device.crt -days 5000
+
+cp rootCA.pem assets/client/tls/ngrokroot.crt
+
+cp device.crt assets/server/tls/snakeoil.crt
+
+cp device.key assets/server/tls/snakeoil.key  
+ make release-server release-client
+
+## 启动服务器
+ 启动ngrokd服务端
+ bin/ngrokd -domain="$NGROK_DOMAIN" -httpAddr=":8000"  
+
 ## Developing on ngrok
 [ngrok developer's guide](docs/DEVELOPMENT.md)
